@@ -36,10 +36,20 @@ namespace PieChart
 
         private Image drawPieChart(ArrayList elements, Size s)
         {
+            Color[] colors = { Color.Red, Color.Orange, Color.Yellow, Color.Green,
+                Color.Blue, Color.Indigo, Color.Violet, Color.DarkRed,
+                Color.DarkOrange, Color.DarkSalmon, Color.DarkGreen,
+                Color.DarkBlue, Color.Lavender, Color.LightBlue, Color.Coral };
+
+            if (elements.Count > colors.Length)
+            {
+                throw new ArgumentException("Pie chart must have " + colors.Length + " or fewer elements");
+            }
+
             Bitmap bm = new Bitmap(s.Width, s.Height);
             Graphics g = Graphics.FromImage(bm);
-
-            // Calculate total value of all rows
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            
             float total = 0;
 
             foreach (PieChartElement e in elements)
@@ -78,7 +88,70 @@ namespace PieChart
                 // the current shape's degrees to the previous total.
                 startAngle += sweepAngle;
             }
+            Point lRectCorner = new Point((s.Width / 2) + 2, 1);
+            Size lRectSize = new Size(s.Width - (s.Width / 2) - 4, s.Height - 2);
+            Rectangle lRect = new Rectangle(lRectCorner, lRectSize);
+
+            // Draw a black box with a white background for the legend.
+            Brush lb = new SolidBrush(Color.White);
+            Pen lp = new Pen(Color.Black, 1);
+            g.FillRectangle(lb, lRect);
+            g.DrawRectangle(lp, lRect);
+
+            // Determine the number of vertical pixels for each legend item
+            int vert = (lRect.Height - 10) / elements.Count;
+
+            // Calculate the width of the legend box as 20% of the total legend width
+            int legendWidth = lRect.Width / 5;
+
+            // Calculate the height of the legend box as 75% of the legend item height
+            int legendHeight = (int)(vert * 0.75);
+
+            // Calculate a buffer space between elements
+            int buffer = (int)(vert - legendHeight) / 2;
+
+            // Calculate the left border of the legend text
+            int textX = lRectCorner.X + legendWidth + buffer * 2;
+
+            // Calculate the width of the legend text
+            int textWidth = lRect.Width - (lRect.Width / 5) - (buffer * 2);
+
+            // Start the legend five pixels from the top of the rectangle
+            int currentVert = 5;
+            int legendColor = 0;
+
+            foreach (PieChartElement e in elements)
+            {
+                // Create a brush with a nice gradient
+                Rectangle thisRect = new Rectangle(lRectCorner.X + buffer, currentVert + buffer, legendWidth, legendHeight);
+                Brush b = new LinearGradientBrush(thisRect, colors[legendColor++], Color.White, (float)45);
+
+                // Draw the legend box fill and border
+                g.FillRectangle(b, thisRect);
+                g.DrawRectangle(lp, thisRect);
+
+                // Define the rectangle for the text
+                RectangleF textRect = new Rectangle(textX, currentVert + buffer, textWidth, legendHeight);
+
+                // Define the font for the text
+                Font tf = new Font("Arial", 12);
+
+                // Create the foreground text brush
+                Brush tb = new SolidBrush(Color.Black);
+
+                // Define the vertical and horizontal alignment for the text
+                StringFormat sf = new StringFormat();
+                sf.Alignment = StringAlignment.Near;
+                sf.LineAlignment = StringAlignment.Center;
+
+                // Draw the text
+                g.DrawString(e.name + ": " + e.value.ToString(), tf, tb, textRect, sf);
+
+                // Increment the current vertical location
+                currentVert += vert;
+            }
             return bm;
+
         }
     }
 }

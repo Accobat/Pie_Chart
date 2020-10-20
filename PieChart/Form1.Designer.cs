@@ -55,6 +55,8 @@ namespace PieChart
             ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
             this.ResumeLayout(false);
 
+
+
         }
 
         #endregion
